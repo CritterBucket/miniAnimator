@@ -97,6 +97,7 @@ public class MainWindow implements ActionListener
 		try
 		{
 			test = ImageIO.read(new File("C:/Users/Caitlin/Desktop/255.png"));
+			System.out.println("TODO: Set a proper default image not dependent on my desktop...");
 		}
 		catch (IOException e)
 		{
@@ -260,7 +261,7 @@ public class MainWindow implements ActionListener
 					else
 					{
 						//TO-DO: replace println with what it says to do :P
-						System.out.println("Should change to default image here; method createLyerList()");
+						System.out.println("TODO: Should change to default image here; method createLayerList()");
 					}
 				}
 				catch (IOException e)
