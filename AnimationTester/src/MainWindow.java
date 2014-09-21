@@ -19,7 +19,9 @@ public class MainWindow implements ActionListener
 	public static JPanel layerPanel;
 	public static JPanel buttonPanel;
 	public static JPanel logPanel;
+	
 	public static JLabel picLabel;
+	public static JScrollPane layerScroll;
 	
 	public static BufferedImage test;
 	public static JFileChooser fileChooser;
@@ -31,6 +33,7 @@ public class MainWindow implements ActionListener
 	public static JButton clearButton;
 	public static JButton playPutton;
 	public static JButton pauseButton;
+	public static JButton saveButton;
 	
 	public static JTextField logField;
 	public static JTextField speedField;
@@ -233,11 +236,13 @@ public class MainWindow implements ActionListener
 	
 	public static void createLayerList()
 	{
+		layerScroll = new JScrollPane();
+		layerScroll.setPreferredSize(new Dimension(200, 350));
+		layerScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		data = new DefaultListModel<String>();
 		layerList = new JList<String>(data);
 		layerList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		layerList.setLayoutOrientation(JList.VERTICAL);
-		layerList.setPreferredSize(new Dimension(200, 200));
 		layerList.setVisibleRowCount(-1);
 		layerList.revalidate();
 		
@@ -273,8 +278,9 @@ public class MainWindow implements ActionListener
 		}
 		);
 		
-		//Add list to layerPanel
-		layerPanel.add(layerList);
+		//Add list to layerScroll and then to layerPanel
+		layerScroll.setViewportView(layerList);
+		layerPanel.add(layerScroll);
 	}
 	
 	public static void populateLayerList()
