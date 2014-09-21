@@ -13,7 +13,7 @@ import java.util.Calendar;
 public class MainWindow implements ActionListener
 {
 	public static JFrame mainFrame;
-	public static JMenuBar menuBar;
+	public static JPanel toolPanel;
 	public static JPanel topPanel;
 	public static JPanel picPanel;
 	public static JPanel layerPanel;
@@ -31,21 +31,27 @@ public class MainWindow implements ActionListener
 	
 	public static JButton openButton;
 	public static JButton clearButton;
-	public static JButton playPutton;
+	
+	public static JButton playButton;
 	public static JButton pauseButton;
 	public static JButton saveButton;
 	
 	public static JTextField logField;
 	public static JTextField speedField;
+	public static int speedValue;
 	
 	public static String logStartingText;
 	public static Calendar calendar;
 	public static SimpleDateFormat dateFormat;
 	
+	public static int animCount;
+	public static Timer animTimer;
+	
 	
 	public static void main(String[] args)
 	{
 		fileList = new ArrayList<File>();
+		animCount = 0;
 		
 		createMainWindow();
 		createFileChooser();
@@ -54,7 +60,7 @@ public class MainWindow implements ActionListener
 	
 	public static void createMainWindow()
 	{
-		mainFrame = new JFrame("Animation Tester");
+		mainFrame = new JFrame("MiniAnim");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLayout(new BoxLayout(mainFrame.getContentPane(), BoxLayout.PAGE_AXIS));		
 		mainFrame.setVisible(true);
@@ -62,14 +68,9 @@ public class MainWindow implements ActionListener
 		mainFrame.setResizable(false);
 		
 		//Adding other pieces
+		createToolBar();
 		createTopPanel();
 		createLogPanel();
-		
-		//Trying to add menu bar
-		createMenu();
-		mainFrame.setJMenuBar(menuBar);
-		mainFrame.repaint();
-		mainFrame.revalidate();
 		
 		//Tidy everything up in the end
 		mainFrame.pack();
@@ -82,7 +83,7 @@ public class MainWindow implements ActionListener
 		
 		topPanel = new JPanel();
 		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.LINE_AXIS));
-		topPanel.setBackground(Color.BLUE);
+		//topPanel.setBackground(Color.BLUE);
 		topPanel.setSize(new Dimension(100, 100));
 		createPicPanel();
 		createLayerPanel();
@@ -94,13 +95,12 @@ public class MainWindow implements ActionListener
 	public static void createPicPanel()
 	{
 		picPanel = new JPanel();
-		picPanel.setBackground(Color.BLUE);
+		picPanel.setBackground(new Color(0x808080));
 		picPanel.setLayout(new GridBagLayout());
 		picPanel.setPreferredSize(new Dimension(400, 400));
 		try
 		{
-			test = ImageIO.read(new File("C:/Users/Caitlin/Desktop/255.png"));
-			System.out.println("TODO: Set a proper default image not dependent on my desktop...");
+			test = ImageIO.read(MainWindow.class.getResource("/img/startImage.png"));
 		}
 		catch (IOException e)
 		{
@@ -124,7 +124,7 @@ public class MainWindow implements ActionListener
 	public static void createLayerPanel()
 	{
 		layerPanel = new JPanel();
-		layerPanel.setBackground(Color.RED);
+		layerPanel.setBackground(new Color(0x5b7673));
 		layerPanel.setPreferredSize(new Dimension(300, 400));
 		topPanel.add(layerPanel);
 		createLayerList();
@@ -148,49 +148,118 @@ public class MainWindow implements ActionListener
 		
 	}
 	
-	public static void createMenu()
+	public static void createToolBar()
 	{
-		//JMenuBar menuBar;
-		JMenu menu, submenu;
-		JMenuItem menuItem;
+		toolPanel = new JPanel();
 		
-		//Instantiate pieces and parts
-		menuBar = new JMenuBar();
+		playButton = new JButton(new ImageIcon(MainWindow.class.getResource("/img/play.png")));
+		playButton.setPreferredSize(new Dimension(28,28));
+		playButton.setMargin(new Insets(0, 0, 0, 0));
+		pauseButton = new JButton(new ImageIcon(MainWindow.class.getResource("/img/pause.png")));
+		pauseButton.setPreferredSize(new Dimension(28,28));
+		pauseButton.setMargin(new Insets(0, 0, 0, 0));
+		saveButton = new JButton(new ImageIcon(MainWindow.class.getResource("/img/save.png")));
+		saveButton.setPreferredSize(new Dimension(28,28));
+		saveButton.setMargin(new Insets(0, 0, 0, 0));
 		
-		//Building first menu
-		menu = new JMenu("A menu");
-		menu.getAccessibleContext().setAccessibleDescription("The only menu with menu items");
-		menuBar.add(menu);
+		speedValue = 200;
+		speedField = new JTextField("" + speedValue);
+		speedField.setPreferredSize(new Dimension(40, 31));
+		speedField.setHorizontalAlignment(SwingConstants.RIGHT);
 		
-		//A group of JMenuItems
-		menuItem = new JMenuItem("A menu item");
-		menuItem.getAccessibleContext().setAccessibleDescription("This doesn't do anything");
-		menu.add(menuItem);
+		//TODO: Action listeners go here, I suppose... or figure out how to make one elsewhere like I think is standard
+		//playButton action should include using speedField.getText() to read in speed and set it accordingly
+		//Might want to set speedField to uneditable while playing, among other things
 		
-		menuItem = new JMenuItem("Another menu item");
-		menuItem.getAccessibleContext().setAccessibleDescription("This doesn't do anything");
-		menu.add(menuItem);
+		animTimer = new Timer(speedValue, timer);
 		
-		menuItem = new JMenuItem("A third menu item");
-		menuItem.getAccessibleContext().setAccessibleDescription("This doesn't do anything");
-		menu.add(menuItem);
+		playButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				try
+				{
+					speedValue = Integer.parseInt(speedField.getText());
+				}
+				catch (NumberFormatException e1)
+				{
+					printToLog("Invalid frame delay value.  Reverting to default");
+					speedField.setText("" + speedValue);
+				}
+				animTimer.setDelay(speedValue);
+				animTimer.start();
+			}
+		}
+		);
 		
-		//Adding a submenu
-		menu.addSeparator();
-		submenu = new JMenu("A submenu");
+		pauseButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				animTimer.stop();
+				printToLog("Animation paused");
+			}
+		}
+		);
 		
-		menuItem = new JMenuItem("An item in the submenu");
-		submenu.add(menuItem);
-		menuItem = new JMenuItem("Another item in the submenu");
-		submenu.add(menuItem);
-		menu.add(submenu);
+		saveButton.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				//TODO: save anim as .gif when button pressed
+			}
+		}
+		);
 		
-		//Building a second menu in the bar
-		menu = new JMenu("Another menu");
-		menu.getAccessibleContext().setAccessibleDescription("Does nothing but look pretty");
-		menuBar.add(menu);
+		
+		toolPanel.add(saveButton);
+		toolPanel.add(playButton);
+		toolPanel.add(pauseButton);
+		toolPanel.add(speedField);
+		
+		toolPanel.setPreferredSize(toolPanel.getPreferredSize());
+		
+		mainFrame.add(toolPanel);
 
 	}
+	
+	public static void animate()
+	{
+		
+		if (fileList.size() > 0)
+		{
+			if (animCount < fileList.size() - 1)
+			{
+				animCount++;
+			}
+			else
+			{
+				animCount = 0;
+			}
+			try
+			{
+				picLabel.setIcon(new ImageIcon(ImageIO.read(fileList.get(animCount))));
+			}
+			catch (IOException e1)
+			{
+				printToLog("Failed to switch image frame");
+			}
+		}
+		else
+		{
+			printToLog("Cannot play animation-- no files loaded");
+			animTimer.stop();
+			
+		}
+	}
+	
+	static Action timer = new AbstractAction()
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			animate();
+		}
+	};
 
 	public static void createFileChooser()
 	{
@@ -265,8 +334,7 @@ public class MainWindow implements ActionListener
 					}
 					else
 					{
-						//TO-DO: replace println with what it says to do :P
-						System.out.println("TODO: Should change to default image here; method createLayerList()");
+						picLabel.setIcon(new ImageIcon(MainWindow.class.getResource("/img/startImage.png")));
 					}
 				}
 				catch (IOException e)
@@ -292,6 +360,7 @@ public class MainWindow implements ActionListener
 	public static void clearLayerList()
 	{
 		data.clear();
+		printToLog("Images cleared");
 	}
 	
 	//Print to log with a time stamp
