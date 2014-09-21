@@ -207,6 +207,7 @@ public class MainWindow implements ActionListener
 			public void actionPerformed(ActionEvent e)
 			{
 				//TODO: save anim as .gif when button pressed
+				printToLog("Save button does not work yet  :( ");
 			}
 		}
 		);
@@ -361,6 +362,7 @@ public class MainWindow implements ActionListener
 	{
 		data.clear();
 		printToLog("Images cleared");
+		picLabel.setIcon(new ImageIcon(MainWindow.class.getResource("/img/startImage.png")));
 	}
 	
 	//Print to log with a time stamp
