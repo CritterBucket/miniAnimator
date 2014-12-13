@@ -7,6 +7,8 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.ArrayList;
 import javax.imageio.*;
+import javax.imageio.stream.ImageOutputStream;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -25,6 +27,7 @@ public class MainWindow implements ActionListener
 	
 	public static BufferedImage test;
 	public static JFileChooser fileChooser;
+	public static JFileChooser fileSaver;
 	public static ArrayList<File> fileList;
 	public static JList<String> layerList;
 	public static DefaultListModel<String> data;
@@ -207,7 +210,37 @@ public class MainWindow implements ActionListener
 			public void actionPerformed(ActionEvent e)
 			{
 				//TODO: save anim as .gif when button pressed
-				printToLog("Save button does not work yet  :( ");
+				
+				String outputFileName;
+				File outputFile;
+				
+				//if no files loaded, abort
+				if(fileList.size() <= 0)
+				{
+					printToLog("Invalid action-- there's nothing to save!");
+				}
+				else
+				{
+					//Pops up a save menu
+					fileSaver = new JFileChooser();
+					int returnValue = fileSaver.showSaveDialog(null);
+					
+					//Actually does the saving part, assuming user hit save
+					if (returnValue == JFileChooser.APPROVE_OPTION)
+					{
+						outputFileName = fileSaver.getSelectedFile() + ".png";
+						outputFile = new File(outputFileName);
+						try
+						{
+							ImageIO.write(ImageIO.read(fileList.get(0)), "png", outputFile);
+						}
+						catch (IOException e1)
+						{
+							printToLog("IOException-- failed to write image to file");
+						}
+					}
+				}
+				
 			}
 		}
 		);
