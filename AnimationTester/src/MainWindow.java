@@ -228,8 +228,10 @@ public class MainWindow implements ActionListener
 					//Actually does the saving part, assuming user hit save
 					if (returnValue == JFileChooser.APPROVE_OPTION)
 					{
-						outputFileName = fileSaver.getSelectedFile() + ".png";
-						outputFile = new File(outputFileName);
+						
+						outputFileName = fileSaver.getSelectedFile() + ".gif";
+						//outputFile = new File(outputFileName);
+						/*
 						try
 						{
 							ImageIO.write(ImageIO.read(fileList.get(0)), "png", outputFile);
@@ -238,6 +240,24 @@ public class MainWindow implements ActionListener
 						{
 							printToLog("IOException-- failed to write image to file");
 						}
+						*/
+						AnimatedGifEncoder encoder = new AnimatedGifEncoder();
+						encoder.setRepeat(0);
+						encoder.setTransparent(null);
+						encoder.start(outputFileName);
+						encoder.setDelay(speedValue);   // 1 frame per sec
+						for(int i = 0; i < fileList.size(); ++i)
+						{
+							try
+							{
+								encoder.addFrame(ImageIO.read(fileList.get(i)));
+							}
+							catch (IOException e1)
+							{
+								printToLog("IOException in saving process");
+							}
+						}
+						encoder.finish();
 					}
 				}
 				
