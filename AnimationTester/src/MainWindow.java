@@ -238,7 +238,6 @@ public class MainWindow implements ActionListener
 					outputFileName = fileSaver.getSelectedFile() + ".gif";						
 					
 					//Using GifSequenceWriter
-					//Thar be try/catch blocks, as far as the eye can see!
 					ImageOutputStream outputStream = null;
 					outputStream = new FileImageOutputStream(new File(outputFileName));
 				
