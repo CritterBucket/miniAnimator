@@ -7,6 +7,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.ArrayList;
 import javax.imageio.*;
+import javax.imageio.stream.FileImageOutputStream;
 import javax.imageio.stream.ImageOutputStream;
 
 import java.text.SimpleDateFormat;
@@ -170,10 +171,6 @@ public class MainWindow implements ActionListener
 		speedField.setPreferredSize(new Dimension(40, 31));
 		speedField.setHorizontalAlignment(SwingConstants.RIGHT);
 		
-		//TODO: Action listeners go here, I suppose... or figure out how to make one elsewhere like I think is standard
-		//playButton action should include using speedField.getText() to read in speed and set it accordingly
-		//Might want to set speedField to uneditable while playing, among other things
-		
 		animTimer = new Timer(speedValue, timer);
 		
 		playButton.addActionListener(new ActionListener()
@@ -186,7 +183,7 @@ public class MainWindow implements ActionListener
 				}
 				catch (NumberFormatException e1)
 				{
-					printToLog("Invalid frame delay value.  Reverting to default");
+					printToLog("Invalid action-- frame delay value must be integer.  Reverting to default");
 					speedField.setText("" + speedValue);
 				}
 				animTimer.setDelay(speedValue);
@@ -200,7 +197,7 @@ public class MainWindow implements ActionListener
 			public void actionPerformed(ActionEvent e)
 			{
 				animTimer.stop();
-				printToLog("Animation paused");
+				printToLog("Event-- animation paused");
 			}
 		}
 		);
@@ -209,58 +206,56 @@ public class MainWindow implements ActionListener
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				//TODO: save anim as .gif when button pressed
-				
-				String outputFileName;
-				File outputFile;
-				
-				//if no files loaded, abort
+				//if no files loaded, don't try to make a GIF
 				if(fileList.size() <= 0)
 				{
 					printToLog("Invalid action-- there's nothing to save!");
 				}
 				else
 				{
-					//Pops up a save menu
-					fileSaver = new JFileChooser();
-					int returnValue = fileSaver.showSaveDialog(null);
-					
-					//Actually does the saving part, assuming user hit save
-					if (returnValue == JFileChooser.APPROVE_OPTION)
+					try
 					{
-						
-						outputFileName = fileSaver.getSelectedFile() + ".gif";
-						//outputFile = new File(outputFileName);
-						/*
-						try
-						{
-							ImageIO.write(ImageIO.read(fileList.get(0)), "png", outputFile);
-						}
-						catch (IOException e1)
-						{
-							printToLog("IOException-- failed to write image to file");
-						}
-						*/
-						AnimatedGifEncoder encoder = new AnimatedGifEncoder();
-						encoder.setRepeat(0);
-						encoder.setTransparent(null);
-						encoder.start(outputFileName);
-						encoder.setDelay(speedValue);   // 1 frame per sec
-						for(int i = 0; i < fileList.size(); ++i)
-						{
-							try
-							{
-								encoder.addFrame(ImageIO.read(fileList.get(i)));
-							}
-							catch (IOException e1)
-							{
-								printToLog("IOException in saving process");
-							}
-						}
-						encoder.finish();
+						exportGIF();
+					} catch (HeadlessException | IOException e1)
+					{
+						printToLog("Error-- GIF export failed.  Please report to CritterBucket");
 					}
 				}
 				
+			}
+
+			public void exportGIF() throws HeadlessException, FileNotFoundException, IOException
+			{
+				String outputFileName;
+				//Pops up a save menu
+				fileSaver = new JFileChooser();
+				int returnValue = fileSaver.showSaveDialog(null);
+				
+				//Actually does the saving part, assuming user hit save
+				if (returnValue == JFileChooser.APPROVE_OPTION)
+				{
+					
+					outputFileName = fileSaver.getSelectedFile() + ".gif";						
+					
+					//Using GifSequenceWriter
+					//Thar be try/catch blocks, as far as the eye can see!
+					ImageOutputStream outputStream = null;
+					outputStream = new FileImageOutputStream(new File(outputFileName));
+				
+					GifSequenceWriter writer = null;
+					writer = new GifSequenceWriter(outputStream, BufferedImage.TYPE_INT_ARGB, speedValue, true);
+				
+					//Finally writing images...
+					for(int i = 0; i <= fileList.size() - 1; ++i)
+					{
+						BufferedImage nextImage = null;
+						nextImage = ImageIO.read(fileList.get(i));
+						writer.writeToSequence(nextImage);	
+					}
+					writer.close();
+					outputStream.close();
+					printToLog("Event-- file saved!");
+				}
 			}
 		}
 		);
@@ -296,12 +291,12 @@ public class MainWindow implements ActionListener
 			}
 			catch (IOException e1)
 			{
-				printToLog("Failed to switch image frame");
+				printToLog("Error-- failed to switch image frame during animation");
 			}
 		}
 		else
 		{
-			printToLog("Cannot play animation-- no files loaded");
+			printToLog("Invalid action-- cannot animate if no files loaded");
 			animTimer.stop();
 			
 		}
@@ -332,7 +327,7 @@ public class MainWindow implements ActionListener
 				{
 					fileList.add(fileChooser.getSelectedFile());
 					populateLayerList();
-					printToLog("File added");
+					printToLog("Event-- file added");
 					
 				}
 			}
@@ -393,7 +388,7 @@ public class MainWindow implements ActionListener
 				}
 				catch (IOException e)
 				{
-					printToLog("Failed to update image to selected for some reason...");
+					printToLog("Error-- failed to update selected image; God only knows why...");
 				}
 				
 			}
@@ -414,18 +409,19 @@ public class MainWindow implements ActionListener
 	public static void clearLayerList()
 	{
 		data.clear();
-		printToLog("Images cleared");
+		printToLog("Event-- images cleared");
 		picLabel.setIcon(new ImageIcon(MainWindow.class.getResource("/img/startImage.png")));
 	}
 	
 	//Print to log with a time stamp
 	public static void printToLog(String input)
 	{
-		logField.setText(input + " | " + dateFormat.format(calendar.getInstance().getTime()));
+		logField.setText(input + " | " + dateFormat.format(Calendar.getInstance().getTime()));
 	}
 
-	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
+	public void actionPerformed(ActionEvent arg0)
+	{
+		// TODO Think this is where Action Listeners should have gone...
 		
 	}
 }
